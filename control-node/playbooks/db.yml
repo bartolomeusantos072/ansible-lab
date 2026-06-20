@@ -1,0 +1,52 @@
+---
+- hosts: dbs
+  become: true
+
+  tasks:
+
+    - name: Atualizar repositorios
+      apt:
+        update_cache: yes
+
+    - name: Instalar MariaDB
+      apt:
+        name:
+          - mariadb-server
+        state: present
+
+    - name: Iniciar MariaDB
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+    
+    - name: Criar bando de dados
+      shell: |
+        mysql -e "CREATE DATABASE IF NOT EXISTS cadastro"
+
+    - name: Criar usuario cadastro
+      shell: |
+        mysql -e "CREATE USER IF NOT EXISTS 'cadastro'@'%' IDENTIFIED BY '123456';"
+        mysql -e "GRANT ALL PRIVILEGES ON cadastro.* TO 'cadastro'@'%';"
+        mysql -e "FLUSH PRIVILEGES;"
+
+    - name: Permitir conexões remotas
+      replace:
+        path: /etc/mysql/mariadb.conf.d/50-server.cnf
+        regexp: '127.0.0.1'
+        replace: '0.0.0.0'
+
+    - name: Reiniciar MariaDB
+      service:
+        name: mariadb
+        state: restarted
+
+    - name: Copiar script SQL
+      copy:
+        src: ../plataforma/cadastro.sql
+        dest: /tmp/cadastro.sql
+
+    - name: Criar tabela pessoas
+      shell: |
+        mysql cadastro < /tmp/cadastro.sql
+

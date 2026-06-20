@@ -1,0 +1,37 @@
+---
+- hosts: apps
+  become: true
+
+  tasks:
+    - name: Atualizar repositorios
+      apt:
+        update_cache: yes
+
+    - name: Instalar Apache e PHP
+      apt:
+        name:
+          - apache2
+          - php
+          - php-mysql
+        state: present
+
+    - name: Iniciar Apache
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+
+    - name: Copiar Index
+      copy:
+        src: ../plataforma/index.html
+        dest: /var/www/html/index.html
+
+    - name: Copiar processa.php
+      copy:
+        src: ../plataforma/processa.php
+        dest: /var/www/html/processa.php
+
+    - name: Copiar styles.css
+      copy:
+        src: ../plataforma/style.css
+        dest: /var/www/html/style.css
